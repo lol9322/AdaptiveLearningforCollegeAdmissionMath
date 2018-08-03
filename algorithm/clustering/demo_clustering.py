@@ -6,7 +6,14 @@ import seaborn as sns
 import tensorflow as tf
 import random
 np.random.seed(1)
-init_data = np.random.rand(2,500)
+init_data = np.random.rand(5,50)
+f = open("test.txt",'w')
+for i in init_data:
+    for j in i[:-1]:
+        data = str(j)+' '
+        f.write(data)
+    f.write(str(i[len(i)-1]))
+    f.write('\n')
 data = {"x": [], "y": [], "cluster": [], "student": []}
 k = 9
 for now in range(len(init_data)):
@@ -68,7 +75,8 @@ cluster  = data["cluster"]
 matrix = [[[] for j in range(k)] for i in range(len(init_data))]
 for i in range(len(init_data)*len(init_data[0])):
     matrix[unit[i]][cluster[i]].append(student[i])
-print(matrix)
+
+# print(matrix)
 
 # tf.concat(concat_dim,values)
 # :텐서들을 하나의 차원에서 이어붙인다.
