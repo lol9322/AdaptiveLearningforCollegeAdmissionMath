@@ -9,9 +9,7 @@ import random
 k = 9
 def cluster(init_data, now_unit): # 클러스터링
     data = {"x": [], "y": [], "cluster": [], "student": []}
-    init_data = [float(i) for i in init_data]
-    temp = 0
-    vectors_set = init_data
+    vectors_set = [float(i) for i in init_data]
     vectors = tf.constant(vectors_set)
     centroides = tf.Variable(tf.slice(tf.nn.top_k(tf.random_shuffle(vectors),len(vectors_set),True)[0],[0],[k]))
     expanded_vectors = tf.expand_dims(vectors, 0)
@@ -20,18 +18,19 @@ def cluster(init_data, now_unit): # 클러스터링
     # 할당 단계 : 유클리드 제곱거리 사용
     diff = tf.sub(expanded_vectors, expanded_centroides)
     sqr = tf.square(diff) # 제곱
-    assignments = tf.argmin(sqr,0) # 최소값 인덱스
+    assignments = tf.argmin(sqr,0) # 해당 노드에서 최소 거리의 클러스터 배열
     # print(sess.run(assignments))
     # # 업데이트 : 새로운 중심 계산
-    means = tf.concat(0,
-                    [tf.reduce_mean(
-                        tf.gather(vectors,
+    means = tf.concat(0, # 1 차원에서 텐서들을 이어붙인다
+                    [tf.reduce_mean( # 평균점 계산
+                        tf.gather(vectors, # 인덱스에 해당하는 값을 가져옴
                                     tf.reshape(
-                                        tf.where(tf.equal(assignments, c))
+                                        tf.where(tf.equal(assignments, c)) # c와 같은 클러스터에 속한 노드의 인덱스 값
                                         ,[1, -1])
                                     )
                         , reduction_indices=[1]) for c in range(k)])
 
+    temp = 0 # 이전의 centroides 값 저장하기위한 변수
     update_centroides = tf.assign(centroides, means)
     past = tf.reduce_sum(tf.square(tf.sub(centroides,temp)))
     temp = centroides
@@ -75,15 +74,15 @@ def load(change): # 텍스트 파일에서 이전 데이터를 불러온다
     while True:
         linenum+=1
         line = rf.readline()
-        if not line:
+        if not line: # 줄이 다 끝났을 경우
             break
         if linenum != change[1]: # 해당하는 unit이 아닌  경우
             data += [line] # 원래 데이터를 그대로 넣어준다
         else: # 새로 들어온 데이터를 추가하여 넣어준다
-            # check_s_id(change[0],len(line))
-            newline = line[:-1]
-            arr = newline.split(' ')
-            arr += [str(change[2])]
+            # check_s_id(change[0],len(line)) # 학습자의 새로 갱신된 데이터가 들어왔음을 체크
+            line = line[:-1] # 개행문자 삭제
+            arr = line.split(' ')
+            arr += [str(change[2])] # 새로운 노드 추가
             cluster(arr,change[1]) # 새로운 데이터로 클러스터링 진행
             newdata = ''
             for i in arr[:-1]:
